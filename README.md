@@ -173,5 +173,7 @@ The book is available [here on Amazon](https://www.amazon.com/Essential-Postgres
 A reader asked if the SQL shown in the book is available online somewhere, so I put the scripts here in this GitHub repository. Enjoy!
 
 Rick Silva
+
 Email: rick@rick-silva.com
+
 Twitter: @rick_silva
