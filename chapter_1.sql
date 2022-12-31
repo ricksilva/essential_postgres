@@ -625,8 +625,8 @@ insert into us_president(president_id, president_name, president_party) values (
 insert into us_president(president_id, president_name, president_party) values (45, 'Donald Trump', 'Republican');
 insert into us_president(president_id, president_name, president_party) values (46, 'Joe Biden', 'Democrat');
 
--- String concatonation with ||
-select  president_name || ' (' || president_party || ')'
+-- String concatonation
+select  concat(president_name, ' (', president_party, ')')
 from    us_president;
 
 -- Greater Than

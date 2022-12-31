@@ -296,7 +296,7 @@ select upper('Say it loud');
 
 -- Writing a function called f_get_president_and_party()
 create or replace function f_get_president_and_party(int) returns text as $$
-    select  president_name || ' (' || president_party || ')'
+	select  concat(president_name, ' (', president_party, ')')
     from    us_president
     where   president_id = $1;
 $$ language sql;
@@ -333,9 +333,8 @@ begin
     from    us_president
     where   president_id = p_president_id;
 
-    return  'President ID: ' || p_president_id || ' Name: ' || v_president_name ||
-            ' Political Party: ' || v_president_party || ' ' || v_current_text;
-
+    return  concat('President ID: ', p_president_id, ' Name: ', v_president_name,
+            ' Political Party: ', v_president_party, ' ', v_current_text);			
 end;
 $$ language plpgsql;
 
