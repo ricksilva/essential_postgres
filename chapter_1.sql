@@ -182,6 +182,27 @@ select  president_party,
 from    us_president
 group by president_party;
 
+drop table if exists world_population;
+
+create table world_population
+(
+    continent   text,
+    country     text,
+    region      int,
+    population  int,
+    area        int
+);
+
+insert into world_population values ('Africa', 'Algeria', 1, 35978000, 2381741);
+insert into world_population values ('Africa', 'Angola', 1,  1837361,  169094);
+insert into world_population values ('Africa', 'Angola', 2,  7567891,  478965);
+insert into world_population values ('Africa', 'Angola', 3,  9587456,  598641);
+insert into world_population values ('South America', 'Uruguay', 1,  1596939,   86561);
+insert into world_population values ('South America', 'Uruguay', 2,  1759645,   89654);
+insert into world_population values ('South America', 'Venezuela', 1, 11459792,  114122);
+insert into world_population values ('South America', 'Venezuela', 2, 13985745,  236478);
+insert into world_population values ('South America', 'Venezuela', 3,  3388308,  365845);
+
 -- This query fails because it has no "group by"
 select  continent,
         country,
