@@ -296,7 +296,7 @@ select upper('Say it loud');
 
 -- Writing a function called f_get_president_and_party()
 create or replace function f_get_president_and_party(int) returns text as $$
-	select  concat(president_name, ' (', president_party, ')')
+    select  concat(president_name, ' (', president_party, ')')
     from    us_president
     where   president_id = $1;
 $$ language sql;
@@ -334,7 +334,7 @@ begin
     where   president_id = p_president_id;
 
     return  concat('President ID: ', p_president_id, ' Name: ', v_president_name,
-            ' Political Party: ', v_president_party, ' ', v_current_text);			
+            ' Political Party: ', v_president_party, ' ', v_current_text);
 end;
 $$ language plpgsql;
 
@@ -473,10 +473,11 @@ call proc_multiply_by_5(3);
 -- Triggers
 --
 
+-- Creating the insert audit table
 drop table if exists us_president_insert_audit;
 
--- Creating the audit table
-create table us_president_insert_audit (
+create table us_president_insert_audit
+(
     insert_user     text,
     insert_date     timestamp with time zone,
     president_id    int,
@@ -484,7 +485,7 @@ create table us_president_insert_audit (
     president_party text
 );
 
--- Creating the trigger function
+-- Creating the insert audit trigger function
 create or replace function tf_us_president_insert_audit()
 returns trigger as $$
 begin
@@ -505,15 +506,15 @@ begin
         new.president_party
     );
     return new;
-    end;
-    $$ language plpgsql;
+end;
+$$ language plpgsql;
 
 select current_user;
 
 select now();
 
--- Creating the trigger
-create trigger tr_us_president_insert_audit
+-- Creating the insert audit trigger
+create or replace trigger tr_us_president_insert_audit
 after insert on us_president
 for each row
 execute function tf_us_president_insert_audit();
@@ -532,24 +533,196 @@ values
     'Democrat'
 );
 
+-- Did it work? Did the new row get audited to us_president_insert_audit?
 select * from us_president_insert_audit;
 
--- Auditing updates
-create trigger tr_us_president_update_audit
-after insert on us_president
+-- Auditing the updates to the us_president table
+drop table if exists us_president_update_audit;
+
+-- The update audit table will capture the values before they were changed, and after they changed
+create table us_president_update_audit
+(
+    update_user                 text,
+    update_date                 timestamp with time zone,
+    original_president_id       int,
+    new_president_id            int,
+    original_president_name     text,
+    new_president_name          text,
+    original_president_party    text,
+    new_president_party         text
+);
+
+-- Creating the update audit trigger function
+create or replace function tf_us_president_update_audit()
+returns trigger as $$
+begin
+    insert into us_president_update_audit
+    (
+        update_user,
+        update_date,
+        original_president_id,
+        new_president_id,
+        original_president_name,
+        new_president_name,
+        original_president_party,
+        new_president_party
+    )
+    values
+    (
+        current_user,
+        now(),
+        old.president_id,
+        new.president_id,
+        old.president_name,
+        new.president_name,
+        old.president_party,
+        new.president_party
+    );
+    return new;
+end;
+$$ language plpgsql;
+
+create or replace trigger tr_us_president_update_audit
+after update on us_president
 for each row
 execute function tf_us_president_update_audit();
 
+-- Let's test it. This should cause the update trigger to fire.
+update  us_president
+set     president_name = 'Hillary Rodham'
+where   president_name = 'Hillary Clinton';
+
+-- Did it work? Did the change get audited?
+select * from us_president_update_audit;
+
 -- Auditing deletes
-create trigger tr_us_president_delete_audit
+drop table if exists us_president_delete_audit;
+
+create table us_president_delete_audit
+(
+    delete_user     text,
+    delete_date     timestamp with time zone,
+    president_id    int,
+    president_name  text,
+    president_party text
+);
+
+-- Creating the delete audit trigger function
+create or replace function tf_us_president_delete_audit()
+returns trigger as $$
+begin
+    insert into us_president_delete_audit
+    (
+        delete_user,
+        delete_date,
+        president_id,
+        president_name,
+        president_party
+    )
+    values
+    (
+        current_user,
+        now(),
+        old.president_id,
+        old.president_name,
+        old.president_party
+    );
+    return new;
+end;
+$$ language plpgsql;
+
+create or replace trigger tr_us_president_delete_audit
 after delete on us_president
 for each row
 execute function tf_us_president_delete_audit();
 
--- One trigger to audit inserts, updates, or deletes
-create trigger tr_us_president_audit
+-- Let's test
+delete from us_president
+where president_id = 47;
+
+-- Did it work? Do we see the change audited to the us_president_delete_audit table?
+select * from us_president_delete_audit;
+
+alter table us_president
+disable trigger tr_us_president_insert_audit;
+
+alter table us_president
+disable trigger tr_us_president_update_audit;
+
+alter table us_president
+disable trigger tr_us_president_delete_audit;
+
+-- Create one trigger to audit inserts, updates, and deletes
+drop table if exists us_president_audit;
+
+create table us_president_audit
+(
+    audit_user  text,
+    audit_date  timestamp with time zone,
+    change      text
+);
+
+-- Creating the one trigger function
+create or replace function tf_us_president_audit()
+returns trigger as $$
+declare
+    update_change text;
+begin
+    if (tg_op = 'INSERT') then
+        insert into us_president_insert_audit(audit_user, audit_date, change)
+        values (current_user, now(), concat('inserted president ', new.president_id, new.president_name, new.president_party));
+    end if;
+
+    if (tg_op = 'DELETE') then
+        insert into us_president_delete_audit(audit_user, delete_date, change)
+        values (current_user, now(), concat(' deleted president ', old.president_id, old.president_name, old.president_party));
+    end if;
+
+    if (tg_op = 'UPDATE') then
+        if (old.president_id != new.president_id) then
+            update_change = concat('president_id changed from ', old.president_id, ' to ', new.president_id);
+        end if;
+
+        if (old.president_name != new.president_name) then
+            update_change = concat(update_change, ' president_name changed from ', old.president_name, ' to ', new.president_name);
+        end if;
+
+        if (old.president_party != new.president_party) then
+            update_change = concat(update_change, ' president_party changed from ', old.president_party, ' to ', new.president_party);
+        end if;
+
+        insert into us_president_audit
+        (
+            audit_user,
+            audit_date,
+            change
+        )
+        values
+        (
+            current_user,
+            now(),
+            update_change
+        );
+
+    end if;
+
+    return new;
+end;
+$$ language plpgsql;
+
+
+create or replace trigger tr_us_president_audit
 after insert or update or delete on us_president
 for each row execute function tf_us_president_audit();
+
+-- Let's test it.
+update  us_president
+set     president_name = 'Jack Kennedy',
+        president_party = 'Republican'
+where   president_name = 'John Kennedy';
+
+-- Did it audit or changes to the us_president_audit table?
+select * from us_president_audit;
 
 alter trigger tr_us_president_insert_audit on us_president rename to tr_us_pres_ins_aud;
 
