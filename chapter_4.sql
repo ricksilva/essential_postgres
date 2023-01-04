@@ -21,7 +21,7 @@ insert into weather_forecast_vs_actual (meteorologist, forecasted_high, actual_h
 values ('Storm Warning', 59, 38);
 
 select  meteorologist,
-        abs(forecasted_high – actual_high) degrees_off
+        abs(forecasted_high - actual_high) degrees_off
 from    weather_forecast_vs_actual;
 
 select  *
