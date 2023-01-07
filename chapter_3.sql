@@ -536,6 +536,57 @@ values
 -- Did it work? Did the new row get audited to us_president_insert_audit?
 select * from us_president_insert_audit;
 
+drop table if exists a_table_with_10_rows;
+
+-- create a table with the same structure as us_president but no rows
+create table a_table_with_10_rows as 
+	select	*
+	from	us_president
+	where	1 = 2; -- 1 never equals 2, so no rows will be written to the new table
+	
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (48, 'Frank Future', 'Democrat');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (49, 'Elon Musk', 'Rocket Party');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (50, 'Hunter Biden', 'Democrat');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (51, 'Donald Trump Jr.', 'Here-We-Go-Again Party');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (52, 'Chelsea Clinton', 'Here-We-Go-Again Party');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (53, 'Kevin McCarthy', 'Republican');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (54, 'Dan Drone', 'Whig');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (55, 'Jack Black', 'Democrat');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (56, 'Humpty Dumpty', 'Fell-Off-A-Wall Party');
+
+insert into a_table_with_10_rows (president_id, president_name, president_party)
+values (57, 'Karen Karenson', 'I-Want-To-Complain Party');
+
+insert into us_president (
+		president_id,
+		president_name,
+		president_party
+		)
+select	president_id,
+		president_name,
+		president_party
+from	a_table_with_10_rows;
+
+-- Did inserting the rows from a_table_with_10_rows get audited? 
+select * from us_president_insert_audit;
+
 -- Auditing the updates to the us_president table
 drop table if exists us_president_update_audit;
 
