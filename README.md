@@ -1,4 +1,5 @@
 ## Essential Postgres
+<a href="https://www.amazon.com/Essential-Postgres-Database-Development-PostgreSQL/dp/B08KH136G4"><img src="images/essential_postgres.jpg" width="125" align="right"></a>
 
 **Essential Postgres** by Rick Silva is a book about the PostgreSQL database for beginner and intermediate database developers. The book gets right to the point, showing how to write Structured Query Language (SQL) statements, create tables, functions, triggers, views, and much more.
 
@@ -173,7 +174,3 @@ The book is available [here on Amazon](https://www.amazon.com/Essential-Postgres
 A reader asked if the SQL shown in the book is available online somewhere, so I put the scripts here in this GitHub repository. Enjoy!
 
 Rick Silva
-
-Email: rick@rick-silva.com
-
-Twitter: @rick_silva
